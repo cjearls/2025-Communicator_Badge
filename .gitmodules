@@ -1,6 +1,0 @@
-[submodule "firmware/libs/micropython-lib"]
-	path = firmware/libs/micropython-lib
-	url = https://github.com/micropython/micropython-lib.git
-[submodule "firmware/libs/mp-crc"]
-	path = firmware/libs/mp-crc
-	url = https://github.com/rkompass/mp-crc.git
