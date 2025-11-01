@@ -8,7 +8,7 @@ try:
 
     ## Import your app here
     from apps import app_menu, chat, config_manager, usb_debug, nametag, talks
-    from apps import userA, userB, userC, userD  ## An invitation
+    from apps import userA, userB, userC, userD, testApp  ## An invitation
 
 
 except Exception as ex:
@@ -31,7 +31,7 @@ async def main():
         userA.App("User A", badge),
         userB.App("User B", badge),
         userC.App("User C", badge),
-        userD.App("User D", badge),
+        testApp.App("Test App", badge),
         # Only 4, the 5th button goes to Home
     ]
     user_menu = app_menu.AppMenu("User", badge, user_apps, False)

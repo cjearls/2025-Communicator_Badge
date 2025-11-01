@@ -61,8 +61,6 @@ class App(BaseApp):
         if self.badge.keyboard.f5():
             self.badge.display.clear()
             self.switch_to_background()
-
-        styles.base_style.set_bg_color(styles.base_style.bg_color()+0x0000F0)
         
 
     def run_background(self):
@@ -85,7 +83,7 @@ class App(BaseApp):
         ## If you want to go fully clean-slate, you can draw straight onto the p.scr object, which should fit the full screen.
         p.create_infobar(["My First App", "Prints to Serial Console"])
         p.create_content()
-        p.create_menubar(["This", "is a ", "test", "Chandler is cool", "Done"])
+        p.create_menubar(["Hello", "World", "Read more", "Hackaday", "Done"])
         p.replace_screen()
 
 

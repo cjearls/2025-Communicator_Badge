@@ -17,6 +17,22 @@ https://docs.micropython.org/en/latest/library/struct.html
 """
 # NEW_PROTOCOL = Protocol(port=<PORT>, name="<NAME>", structdef="!")
 
+def calculate_color(counter, max_counter, max_color):
+    red = 0
+    green = 0
+    blue = 0
+    if counter >= 0 and counter < max_counter/3:
+        red = counter*max_color/(max_counter/3)
+        blue = max_color - (counter*max_color/(max_counter/3))
+    elif counter >= max_counter/3 and counter < 2*max_counter/3:
+        red = max_color-(counter-max_counter/3)*max_color/(max_counter/3)
+        green = (counter-max_counter/3)*max_color/(max_counter/3)
+    else:
+        green = max_color-(counter-2*max_counter/3)*max_color/(max_counter/3)
+        blue = (counter-2*max_counter/3)*max_color/(max_counter/3)
+
+    new_color = (int(red)<<16) | (int(green)<<8) | int(blue)
+    return new_color
 
 class App(BaseApp):
     """Define a new app to run on the badge."""
@@ -29,7 +45,7 @@ class App(BaseApp):
         super().__init__(name, badge)
         # You can also set the sleep time when running in the foreground or background. Uncomment and update.
         # Remember to make background sleep longer so this app doesn't interrupt other processing.
-        # self.foreground_sleep_ms = 10
+        self.foreground_sleep_ms = 1
         # self.background_sleep_ms = 1000
         self.username = self.badge.config.get("nametag").decode().strip()
         self.font = (
@@ -117,9 +133,21 @@ class App(BaseApp):
             self.app_state = self.app_states.index("in_fullscreen")
 
         if self.app_states[self.app_state] == "in_fullscreen":
-            if (
-                self.badge.keyboard.f1()
-                or self.badge.keyboard.f2()
+            # styles.base_style.set_bg_color(styles.base_style.bg_color + 0x0000F0)
+            print("in fullscreen")
+            styles.bg_counter += 1
+            if styles.bg_counter >= styles.MAX_BG_COUNTER:
+                styles.bg_counter = 0
+
+            print("bg_counter: " + str(styles.bg_counter))
+            styles.current_bg_color = calculate_color(styles.bg_counter, styles.MAX_BG_COUNTER, styles.MAX_COLOR)
+            print("background_color: " + str(styles.current_bg_color))
+            styles.base_style.set_bg_color(lvgl.color_hex(styles.current_bg_color))
+            self.fullscreen.add_style(styles.base_style, lvgl.STATE.DEFAULT)
+            if self.badge.keyboard.f1():
+                print("f1 pressed")
+            elif (
+                self.badge.keyboard.f2()
                 or self.badge.keyboard.f3()
                 or self.badge.keyboard.f4()
                 or self.badge.keyboard.f5()
