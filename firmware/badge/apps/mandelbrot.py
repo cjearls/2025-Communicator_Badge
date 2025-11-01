@@ -77,28 +77,28 @@ class App(BaseApp):
             # This is the x value for the graph
             graph_x = x - self.x_width/2
 
+            zoom_center_x = float(-0.6)
+            zoom_center_y = float(0.25)
+            zoom_factor = float(500.0)
+
             for y in range(self.y_height):
                 # This is the y value for the graph
                 graph_y = self.y_height/2 - y
 
                 # For each pixel in the column, write the upper and lower bytes
-                if graph_x == 0 or graph_y == 0:
-                    self.canvas_buffer[2*x+self.x_width*2*y] = 0 
-                    self.canvas_buffer[2*x+1+self.x_width*2*y] = 0
-                else:
-                    z = (0.0, 0.0)
-                    c = (2.0*graph_x/float(self.y_height), 2.0*graph_y/float(self.y_height))
-                    iterations = mandelbrot_iter(z, c, 10.0**20, 0xFE)
-                    # print("Mandelbrot iteration " + str(iteration) + " for c=" + str(c[0]) + ": z_real: " + str(z[0]) + ", z_imag: " + str(z[1]))
-                    # Then convert it to the display's RGB565 format
-                    color_24bit = cycle_colors(iterations, 0xFF)
-                    color =  generate_565_color((color_24bit>>16)&0xFF, (color_24bit>>8)&0xFF, color_24bit&0xFF)
-                    
-                    #Then get the upper and lower bytes of the color for writing to the buffer
-                    upper_color_byte = color >> 8
-                    lower_color_byte = color & 0xFF
-                    self.canvas_buffer[2*x+self.x_width*2*y] = lower_color_byte
-                    self.canvas_buffer[2*x+1+self.x_width*2*y] = upper_color_byte
+                z = (0.0, 0.0)
+                c = (graph_x/zoom_factor+zoom_center_x, graph_y/zoom_factor + zoom_center_y)
+                iterations = mandelbrot_iter(z, c, 10.0**20, 0xFE)
+                # print("Mandelbrot iteration " + str(iteration) + " for c=" + str(c[0]) + ": z_real: " + str(z[0]) + ", z_imag: " + str(z[1]))
+                # Then convert it to the display's RGB565 format
+                color_24bit = cycle_colors(iterations, 0xFF)
+                color =  generate_565_color((color_24bit>>16)&0xFF, (color_24bit>>8)&0xFF, color_24bit&0xFF)
+                
+                #Then get the upper and lower bytes of the color for writing to the buffer
+                upper_color_byte = color >> 8
+                lower_color_byte = color & 0xFF
+                self.canvas_buffer[2*x+self.x_width*2*y] = lower_color_byte
+                self.canvas_buffer[2*x+1+self.x_width*2*y] = upper_color_byte
             # By setting the buffer, we tell the display to update with the new data we've written to it
             self.canvas.set_buffer(self.canvas_buffer,self.x_width,self.y_height,lvgl.COLOR_FORMAT.RGB565)
 
