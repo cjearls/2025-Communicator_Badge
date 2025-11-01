@@ -74,11 +74,22 @@ class App(BaseApp):
 
             for y in range(self.y_height):
                 # For each pixel in the column, write the upper and lower bytes
-                self.canvas_buffer[2*x+self.x_width*2*y] = lower_color_byte
-                self.canvas_buffer[2*x+1+self.x_width*2*y] = upper_color_byte
+                if (x > 100 and x < 300) and (y > 50 and y < 100):
+                    self.canvas_buffer[2*x+self.x_width*2*y] = ~lower_color_byte
+                    self.canvas_buffer[2*x+1+self.x_width*2*y] = ~upper_color_byte
+                else:
+                    self.canvas_buffer[2*x+self.x_width*2*y] = lower_color_byte
+                    self.canvas_buffer[2*x+1+self.x_width*2*y] = upper_color_byte
 
         # By setting the buffer, we tell the display to update with the new data we've written to it
         self.canvas.set_buffer(self.canvas_buffer,self.x_width,self.y_height,lvgl.COLOR_FORMAT.RGB565)
+
+        if self.nametag:
+            self.nametag.delete()
+        self.nametag = lvgl.label(self.fullscreen)
+        self.nametag.set_style_text_font(lvgl.font_montserrat_42, lvgl.STATE.DEFAULT)
+        self.nametag.align(lvgl.ALIGN.CENTER, 0, 0)
+        self.nametag.set_text(self.username)
 
         # Listen for any of the functions keys to escape from the app
         if (
@@ -101,6 +112,9 @@ class App(BaseApp):
         
         # Get the active screen
         self.fullscreen = lvgl.obj(lvgl.screen_active())
+        self.fullscreen.add_style(styles.base_style, lvgl.STATE.DEFAULT)
+        self.fullscreen.set_width(lvgl.pct(100))
+        self.fullscreen.set_height(lvgl.pct(100))
 
         # This stores how far to shift the columns of colors while scrolling the screen
         self.pixel_shift = 0
@@ -122,3 +136,9 @@ class App(BaseApp):
 
         # Center the canvas on the screen
         self.canvas.center()
+
+        self.username = self.badge.config.get("nametag").decode().strip()
+        self.nametag = lvgl.label(self.fullscreen)
+        self.nametag.set_style_text_font(lvgl.font_montserrat_42, lvgl.STATE.DEFAULT)
+        self.nametag.align(lvgl.ALIGN.CENTER, 0, 0)
+        self.nametag.set_text(self.username)

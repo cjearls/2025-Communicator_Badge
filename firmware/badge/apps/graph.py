@@ -58,24 +58,57 @@ class App(BaseApp):
 
         # Loop through the pixels
         for x in range(self.x_width):
-            # For each column of pixels, determine what the color should be
-            color_24bit = cycle_colors((x+self.pixel_shift)%self.x_width, self.x_width)
-            
-            # Then convert it to the display's RGB565 format
-            color =  generate_565_color(
-                                        (color_24bit>>16) & 0xFF,
-                                        (color_24bit>>8 ) & 0xFF,
-                                        (color_24bit    ) & 0xFF
-            )
-            
-            #Then get the upper and lower bytes of the color for writing to the buffer
-            upper_color_byte = color >> 8
-            lower_color_byte = color & 0xFF
+
+            # This is the x value for the graph
+            graph_x = x - self.x_width/2
 
             for y in range(self.y_height):
+                # This is the y value for the graph
+                graph_y = self.y_height/2 - y
+
                 # For each pixel in the column, write the upper and lower bytes
-                self.canvas_buffer[2*x+self.x_width*2*y] = lower_color_byte
-                self.canvas_buffer[2*x+1+self.x_width*2*y] = upper_color_byte
+                if graph_x == 0 or graph_y == 0:
+                    self.canvas_buffer[2*x+self.x_width*2*y] = 0 
+                    self.canvas_buffer[2*x+1+self.x_width*2*y] = 0
+                elif graph_x == graph_y:
+                    # For each column of pixels, determine what the color should be
+                    color_24bit = 0xFF0000
+                    
+                    # Then convert it to the display's RGB565 format
+                    color =  generate_565_color(
+                                                (color_24bit>>16) & 0xFF,
+                                                (color_24bit>>8 ) & 0xFF,
+                                                (color_24bit    ) & 0xFF
+                    )
+            
+                    #Then get the upper and lower bytes of the color for writing to the buffer
+                    upper_color_byte = color >> 8
+                    lower_color_byte = color & 0xFF
+
+                    # For each pixel in the column, write the upper and lower bytes
+                    self.canvas_buffer[2*x+self.x_width*2*y] = lower_color_byte
+                    self.canvas_buffer[2*x+1+self.x_width*2*y] = upper_color_byte
+                elif (graph_x - 50)*(graph_x - 50)+(graph_y - 20)*(graph_y - 20) < 100:
+                    # For each column of pixels, determine what the color should be
+                    color_24bit = 0x0000FF
+                    
+                    # Then convert it to the display's RGB565 format
+                    color =  generate_565_color(
+                                                (color_24bit>>16) & 0xFF,
+                                                (color_24bit>>8 ) & 0xFF,
+                                                (color_24bit    ) & 0xFF
+                    )
+            
+                    #Then get the upper and lower bytes of the color for writing to the buffer
+                    upper_color_byte = color >> 8
+                    lower_color_byte = color & 0xFF
+
+                    # For each pixel in the column, write the upper and lower bytes
+                    self.canvas_buffer[2*x+self.x_width*2*y] = lower_color_byte
+                    self.canvas_buffer[2*x+1+self.x_width*2*y] = upper_color_byte
+                else:
+                    self.canvas_buffer[2*x+self.x_width*2*y] = 0xFF
+                    self.canvas_buffer[2*x+1+self.x_width*2*y] = 0xFF
 
         # By setting the buffer, we tell the display to update with the new data we've written to it
         self.canvas.set_buffer(self.canvas_buffer,self.x_width,self.y_height,lvgl.COLOR_FORMAT.RGB565)

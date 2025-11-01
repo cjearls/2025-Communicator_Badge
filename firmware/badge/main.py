@@ -8,7 +8,7 @@ try:
 
     ## Import your app here
     from apps import app_menu, chat, config_manager, usb_debug, nametag, talks
-    from apps import userA, userB, userC, rgb_scroll  ## An invitation
+    from apps import userA, rgb_scroll, rgb_scroll_nametag, mandelbrot  ## An invitation
 
 
 except Exception as ex:
@@ -29,9 +29,9 @@ async def main():
     # Link them into the menu system here, for starters
     user_apps = [
         userA.App("User A", badge),
-        userB.App("User B", badge),
-        userC.App("User C", badge),
         rgb_scroll.App("RGB Scroll", badge),
+        rgb_scroll_nametag.App("RGB Name", badge),
+        mandelbrot.App("Mandelbrot", badge)
         # Only 4, the 5th button goes to Home
     ]
     user_menu = app_menu.AppMenu("User", badge, user_apps, False)
