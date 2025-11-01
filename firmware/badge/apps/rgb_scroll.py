@@ -25,7 +25,7 @@ def cycle_colors(counter_value, max_counter):
     if counter_value >= 0 and counter_value < threshold0:
         # Transition the colors from blue to red
         red = counter_value*0xFF/(threshold_count)
-        blue = 0xFF - (counter_value*0xFF/(threshold_count))
+        blue = 0xFF-(counter_value*0xFF/(threshold_count))
     elif counter_value >= threshold0 and counter_value < threshold1:
         # Transition the colors from red to green
         red = 0xFF-(counter_value-threshold0)*0xFF/(threshold_count)
