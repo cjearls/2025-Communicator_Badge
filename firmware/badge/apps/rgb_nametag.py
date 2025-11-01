@@ -17,25 +17,37 @@ https://docs.micropython.org/en/latest/library/struct.html
 """
 # NEW_PROTOCOL = Protocol(port=<PORT>, name="<NAME>", structdef="!")
 
-def calculate_color(counter, max_counter, max_color):
+# This cycles through red, green, and blue with 8 bits per color channel on a scalable counter_value
+def cycle_colors(counter_value, max_counter):
     red = 0
     green = 0
     blue = 0
-    if counter >= 0 and counter < max_counter/3:
-        red = counter*max_color/(max_counter/3)
-        blue = max_color - (counter*max_color/(max_counter/3))
-    elif counter >= max_counter/3 and counter < 2*max_counter/3:
-        red = max_color-(counter-max_counter/3)*max_color/(max_counter/3)
-        green = (counter-max_counter/3)*max_color/(max_counter/3)
-    else:
-        green = max_color-(counter-2*max_counter/3)*max_color/(max_counter/3)
-        blue = (counter-2*max_counter/3)*max_color/(max_counter/3)
+    threshold_count = max_counter/3
+    threshold0 = threshold_count
+    threshold1 = threshold_count*2
 
+    # There are three parts of the cycle:
+    if counter_value >= 0 and counter_value < threshold0:
+        # Transition the colors from blue to red
+        red = counter_value*0xFF/(threshold_count)
+        blue = 0xFF - (counter_value*0xFF/(threshold_count))
+    elif counter_value >= threshold0 and counter_value < threshold1:
+        # Transition the colors from red to green
+        red = 0xFF-(counter_value-threshold0)*0xFF/(threshold_count)
+        green = (counter_value-threshold0)*0xFF/(threshold_count)
+    else:
+        # Transition the colors from green to blue
+        green = 0xFF-(counter_value-threshold1)*0xFF/(threshold_count)
+        blue = (counter_value-threshold1)*0xFF/(threshold_count)
+
+    # Create the 24-bit color by combining the component colors
     new_color = (int(red)<<16) | (int(green)<<8) | int(blue)
     return new_color
 
+# This translates from a 24-bit color space to a 16-bit color space, where red and blue are 5 bits and green is 6 bits
 def generate_565_color(red_byte, green_byte, blue_byte):
-    return (((red_byte&0xFF)>>3)<<11) | (((green_byte&0xFF)>>2)<<5) | ((blue_byte&0xFF)>>3)
+    # Mask and shift each color to the correct place
+    return ((red_byte&0xF8)<<8) | ((green_byte&0xFC)<<3) | ((blue_byte&0xF8)>>3)
 
 class App(BaseApp):
     """Define a new app to run on the badge."""
@@ -146,10 +158,10 @@ class App(BaseApp):
 
         if self.app_states[self.app_state] == "in_fullscreen":
             # This slowly shifts the RGB around
-            self.pixel_shift += 10
+            self.pixel_shift -= 10
 
             for x in range(self.x_width):
-                color_24bit = calculate_color((x+self.pixel_shift)%self.x_width, styles.MAX_BG_COUNTER, styles.MAX_COLOR)
+                color_24bit = cycle_colors((x+self.pixel_shift)%self.x_width, styles.MAX_BG_COUNTER)
                 color =  generate_565_color(
                                             (color_24bit>>16) & 0xFF,
                                             (color_24bit>>8 ) & 0xFF,
