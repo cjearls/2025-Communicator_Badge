@@ -97,7 +97,7 @@ class App(BaseApp):
                 self.canvas_buffer[2*x+1+self.x_width*2*y] = upper_color_byte
             # By setting the buffer, we tell the display to update with the new data we've written to it
             self.canvas.set_buffer(self.canvas_buffer,self.x_width,self.y_height,lvgl.COLOR_FORMAT.RGB565)
-        self.zoom_factor /= 4.0
+        self.zoom_factor *= 4.0
 
 
     def switch_to_foreground(self):
@@ -135,6 +135,6 @@ class App(BaseApp):
         # This tells where on the fractal we'll be rendering
         self.zoom_center_x = float(-0.74548)
         self.zoom_center_y = float(0.11669)
-        self.zoom_factor = float(50_0000.0)
+        self.zoom_factor = float(1_000_000.0)
         # This is the threshold we use to test how many iterations it takes to escape, so we can keep rendering pretty stuff
         self.bound_number = 10.0**20
