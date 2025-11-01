@@ -58,8 +58,8 @@ def mandelbrot_iter(z, c, bound_number, iterations):
     for iteration in range(iterations):
         z = mandelbrot(z, c)
         if z[0] > bound_number or z[0] < -bound_number or z[1] > bound_number or z[1] < -bound_number:
-            return iteration
-    return iterations+1
+            return (iteration, z)
+    return (iterations+1, z)
 
 class App(BaseApp):
     """Define a new app to run on the badge."""
@@ -77,18 +77,14 @@ class App(BaseApp):
             # This is the x value for the graph
             graph_x = x - self.x_width/2
 
-            zoom_center_x = float(-0.6)
-            zoom_center_y = float(0.25)
-            zoom_factor = float(500.0)
-
             for y in range(self.y_height):
                 # This is the y value for the graph
                 graph_y = self.y_height/2 - y
 
                 # For each pixel in the column, write the upper and lower bytes
                 z = (0.0, 0.0)
-                c = (graph_x/zoom_factor+zoom_center_x, graph_y/zoom_factor + zoom_center_y)
-                iterations = mandelbrot_iter(z, c, 10.0**20, 0xFE)
+                c = (graph_x/self.zoom_factor+self.zoom_center_x, graph_y/self.zoom_factor + self.zoom_center_y)
+                (iterations, z_result) = mandelbrot_iter(z, c, self.bound_number, 0xFE)
                 # print("Mandelbrot iteration " + str(iteration) + " for c=" + str(c[0]) + ": z_real: " + str(z[0]) + ", z_imag: " + str(z[1]))
                 # Then convert it to the display's RGB565 format
                 color_24bit = cycle_colors(iterations, 0xFF)
@@ -101,20 +97,8 @@ class App(BaseApp):
                 self.canvas_buffer[2*x+1+self.x_width*2*y] = upper_color_byte
             # By setting the buffer, we tell the display to update with the new data we've written to it
             self.canvas.set_buffer(self.canvas_buffer,self.x_width,self.y_height,lvgl.COLOR_FORMAT.RGB565)
+        self.zoom_factor /= 4.0
 
-        # By setting the buffer, we tell the display to update with the new data we've written to it
-        self.canvas.set_buffer(self.canvas_buffer,self.x_width,self.y_height,lvgl.COLOR_FORMAT.RGB565)
-
-        # Listen for any of the functions keys to escape from the app
-        if (
-            self.badge.keyboard.f1()
-            or self.badge.keyboard.f2()
-            or self.badge.keyboard.f3()
-            or self.badge.keyboard.f4()
-            or self.badge.keyboard.f5()
-        ):
-            self.badge.display.clear()
-            self.switch_to_background()
 
     def switch_to_foreground(self):
         """Set the app as the active foreground app.
@@ -147,3 +131,10 @@ class App(BaseApp):
 
         # Center the canvas on the screen
         self.canvas.center()
+
+        # This tells where on the fractal we'll be rendering
+        self.zoom_center_x = float(-0.74548)
+        self.zoom_center_y = float(0.11669)
+        self.zoom_factor = float(50_0000.0)
+        # This is the threshold we use to test how many iterations it takes to escape, so we can keep rendering pretty stuff
+        self.bound_number = 10.0**20
