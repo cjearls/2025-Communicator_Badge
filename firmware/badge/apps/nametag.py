@@ -125,27 +125,45 @@ class App(BaseApp):
             self.fullscreen.add_style(styles.base_style, lvgl.STATE.DEFAULT)
             self.fullscreen.set_width(lvgl.pct(100))
             self.fullscreen.set_height(lvgl.pct(100))
-            nametag = lvgl.label(self.fullscreen)
-            nametag.set_style_text_font(self.font, lvgl.STATE.DEFAULT)
-            nametag.align(lvgl.ALIGN.CENTER, 0, 0)
-            nametag.set_text(self.username)
+            self.nametag = lvgl.label(self.fullscreen)
+            self.nametag.set_style_text_font(self.font, lvgl.STATE.DEFAULT)
+            self.nametag.align(lvgl.ALIGN.CENTER, 0, 0)
+            self.nametag.set_text(self.username)
+            self.canvas = lvgl.canvas(lvgl.screen_active())
 
             self.app_state = self.app_states.index("in_fullscreen")
 
         if self.app_states[self.app_state] == "in_fullscreen":
             # styles.base_style.set_bg_color(styles.base_style.bg_color + 0x0000F0)
-            print("in fullscreen")
+            # print("in fullscreen")
             styles.bg_counter += 1
             if styles.bg_counter >= styles.MAX_BG_COUNTER:
                 styles.bg_counter = 0
 
-            print("bg_counter: " + str(styles.bg_counter))
+            # print("bg_counter: " + str(styles.bg_counter))
             styles.current_bg_color = calculate_color(styles.bg_counter, styles.MAX_BG_COUNTER, styles.MAX_COLOR)
-            print("background_color: " + str(styles.current_bg_color))
+            # print("background_color: " + str(styles.current_bg_color))
             styles.base_style.set_bg_color(lvgl.color_hex(styles.current_bg_color))
             self.fullscreen.add_style(styles.base_style, lvgl.STATE.DEFAULT)
             if self.badge.keyboard.f1():
                 print("f1 pressed")
+
+
+                # print(self.canvas)
+                # print(self.canvas.fill_bg(lvgl.color_hex(0x00FF00), 100))
+                x_width = 428
+                y_height = 142
+                size_of_color = 2
+
+                buffer = bytearray(x_width*y_height*size_of_color)
+
+                print(self.canvas.set_buffer(buffer,x_width,y_height,lvgl.COLOR_FORMAT.RGB565))
+                print(self.canvas.center())
+
+                print(self.canvas.fill_bg(lvgl.color_hex(0x00ff00), 0xFFFF))
+                for x in range(x_width):
+                    for y in range(y_height):
+                        self.canvas.set_px(x,y,lvgl.color_hex(((0xFF&x)<<16)|((0xFF&y)<<8)|(0xFF&(x*y))), 0xFFFF)
             elif (
                 self.badge.keyboard.f2()
                 or self.badge.keyboard.f3()
