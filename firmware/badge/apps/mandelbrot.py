@@ -12,6 +12,33 @@ from ui.page import Page
 import ui.styles as styles
 import lvgl
 
+#
+def find_best_frame(delta_array, frame_width, frame_height, x_width, y_height):
+    max_x = 0
+    max_y = 0
+    delta_max = 0
+    for x in range(x_width):
+        if x - frame_width/2 < 0 or x + frame_width/2 > x_width-1:
+            # Skip if we're going to try invalid indices to access the array
+            continue
+        for y in range(y_height):
+            if y - frame_height/2 < 0 or y + frame_height/2 > y_height - 1:
+                # Skip if we're going to try invalid indices to access the array
+                continue
+
+            # Add up all the pixel delta sums
+            delta_sum = 0
+            for column_index in range(int(x-frame_width/2), int(x+frame_width/2)):
+                for row_index in range(int(y-frame_height/2), int(y+frame_height/2)):
+                    delta_sum += delta_array[column_index][row_index]
+
+            if delta_sum > delta_max:
+                delta_max = delta_sum
+                max_x = x
+                max_y = y
+            
+    return (max_x, max_y)
+
 # This finds areas that have the most variance by checking the average disatnce between a pixel and its neighbors
 def get_iteration_deltas(iteration_array):
     delta_array = list()
@@ -124,18 +151,27 @@ class App(BaseApp):
             # By setting the buffer, we tell the display to update with the new data we've written to it
             self.canvas.set_buffer(self.canvas_buffer,self.x_width,self.y_height,lvgl.COLOR_FORMAT.RGB565)
 
+        # Get the deltas of each pixel with its neighbors and put them in an array
         delta_array = get_iteration_deltas(self.iteration_array)
-        max_x_index = 0
-        max_y_index = 0
-        max_delta = 0
-        for x_index in range(len(delta_array)):
-            for y_index in range(len(delta_array[x_index])):
-                if delta_array[x_index][y_index] > max_delta:
-                    max_delta = delta_array[x_index][y_index]
-                    max_x_index = x_index
-                    max_y_index = y_index
-        self.zoom_center_x = self.zoom_center_x + (max_x_index - self.x_width/2)/self.zoom_factor
-        self.zoom_center_y = self.zoom_center_y + (max_y_index - self.y_height/2)/self.zoom_factor
+        # # Get the pixel with the largest delta and zoom in on it
+        # max_x_index = 0
+        # max_y_index = 0
+        # max_delta = 0
+        # for x_index in range(len(delta_array)):
+        #     for y_index in range(len(delta_array[x_index])):
+        #         if delta_array[x_index][y_index] > max_delta:
+        #             max_delta = delta_array[x_index][y_index]
+        #             max_x_index = x_index
+        #             max_y_index = y_index
+        # self.zoom_center_x = self.zoom_center_x + (max_x_index - self.x_width/2)/self.zoom_factor
+        # self.zoom_center_y = self.zoom_center_y + (max_y_index - self.y_height/2)/self.zoom_factor
+
+        # Get the next frame center with the largest delta for a better photo
+        frame_width = self.x_width/self.zoom_factor
+        frame_height = self.y_height/self.zoom_factor
+        (new_zoom_center_x, new_zoom_center_y) = find_best_frame(delta_array, frame_width, frame_height, self.x_width, self.y_height)
+        self.zoom_center_x = self.zoom_center_x + (new_zoom_center_x - self.x_width/2)/self.zoom_factor
+        self.zoom_center_y = self.zoom_center_y + (new_zoom_center_y - self.y_height/2)/self.zoom_factor
 
         # Increase the zoom and go again
         self.zoom_factor *= self.zoom_scale_factor
@@ -177,11 +213,14 @@ class App(BaseApp):
         self.zoom_center_x = float(-0.74548)
         self.zoom_center_y = float(0.11669)
         self.zoom_factor = float(500_000.0)
+        # self.zoom_factor = float(100.0)
         self.zoom_scale_factor = 4.0
         # This is the threshold we use to test how many iterations it takes to escape, so we can keep rendering pretty stuff
         self.bound_number = 10.0**20
+        # self.bound_number = 10.0**5
         # This is the number of times we run mandelbrot to see if it escapes the bounds
         self.mandelbrot_iterations = 0xFE
+        # self.mandelbrot_iterations = 0x08
         # This is going to be used to determine where the most interesting places to zoom into are
         self.iteration_array = list()
         for column in range(self.x_width):
