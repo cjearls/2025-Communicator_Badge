@@ -12,6 +12,29 @@ from ui.page import Page
 import ui.styles as styles
 import lvgl
 
+# This finds areas that have the most variance by checking the average disatnce between a pixel and its neighbors
+def get_iteration_deltas(iteration_array):
+    delta_array = list()
+    for column_index in range(len(iteration_array)):
+        delta_array.append(list())
+        for row_index in range(len(iteration_array[column_index])):
+            # Calculate the average difference between this iteration count and the iteration counts surrounding
+            iteration_value = iteration_array[column_index][row_index]
+            delta_sum = 0
+            if column_index == 0 or column_index == (len(iteration_array)-1) or row_index == 0 or row_index == (len(iteration_array[column_index])-1):
+                # Don't consider the borders for zooming at all
+                pass
+            else:
+                # add the difference values for neighboring pixels in x and y
+                delta_sum += abs(iteration_value - iteration_array[column_index+1][row_index])
+                delta_sum += abs(iteration_value - iteration_array[column_index-1][row_index])
+                delta_sum += abs(iteration_value - iteration_array[column_index][row_index+1])
+                delta_sum += abs(iteration_value - iteration_array[column_index][row_index-1])
+            # add the delta average to the array for later processing
+            delta_array[column_index].append(delta_sum/4)
+
+    return delta_array
+
 # This cycles through red, green, and blue with 8 bits per color channel on a scalable counter_value
 def cycle_colors(counter_value, max_counter):
     red = 0
@@ -84,10 +107,13 @@ class App(BaseApp):
                 # For each pixel in the column, write the upper and lower bytes
                 z = (0.0, 0.0)
                 c = (graph_x/self.zoom_factor+self.zoom_center_x, graph_y/self.zoom_factor + self.zoom_center_y)
-                (iterations, z_result) = mandelbrot_iter(z, c, self.bound_number, 0xFE)
-                # print("Mandelbrot iteration " + str(iteration) + " for c=" + str(c[0]) + ": z_real: " + str(z[0]) + ", z_imag: " + str(z[1]))
+                (iterations, z_result) = mandelbrot_iter(z, c, self.bound_number, self.mandelbrot_iterations)
+
+                # Log the iterations needed so we can choose an interesting place to zoom next time
+                self.iteration_array[x][self.y_height-1-y] = iterations
+
                 # Then convert it to the display's RGB565 format
-                color_24bit = cycle_colors(iterations, 0xFF)
+                color_24bit = cycle_colors(iterations, self.mandelbrot_iterations+1)
                 color =  generate_565_color((color_24bit>>16)&0xFF, (color_24bit>>8)&0xFF, color_24bit&0xFF)
                 
                 #Then get the upper and lower bytes of the color for writing to the buffer
@@ -97,7 +123,22 @@ class App(BaseApp):
                 self.canvas_buffer[2*x+1+self.x_width*2*y] = upper_color_byte
             # By setting the buffer, we tell the display to update with the new data we've written to it
             self.canvas.set_buffer(self.canvas_buffer,self.x_width,self.y_height,lvgl.COLOR_FORMAT.RGB565)
-        self.zoom_factor *= 4.0
+
+        delta_array = get_iteration_deltas(self.iteration_array)
+        max_x_index = 0
+        max_y_index = 0
+        max_delta = 0
+        for x_index in range(len(delta_array)):
+            for y_index in range(len(delta_array[x_index])):
+                if delta_array[x_index][y_index] > max_delta:
+                    max_delta = delta_array[x_index][y_index]
+                    max_x_index = x_index
+                    max_y_index = y_index
+        self.zoom_center_x = self.zoom_center_x + (max_x_index - self.x_width/2)/self.zoom_factor
+        self.zoom_center_y = self.zoom_center_y + (max_y_index - self.y_height/2)/self.zoom_factor
+
+        # Increase the zoom and go again
+        self.zoom_factor *= self.zoom_scale_factor
 
 
     def switch_to_foreground(self):
@@ -135,6 +176,16 @@ class App(BaseApp):
         # This tells where on the fractal we'll be rendering
         self.zoom_center_x = float(-0.74548)
         self.zoom_center_y = float(0.11669)
-        self.zoom_factor = float(1_000_000.0)
+        self.zoom_factor = float(500_000.0)
+        self.zoom_scale_factor = 4.0
         # This is the threshold we use to test how many iterations it takes to escape, so we can keep rendering pretty stuff
         self.bound_number = 10.0**20
+        # This is the number of times we run mandelbrot to see if it escapes the bounds
+        self.mandelbrot_iterations = 0xFE
+        # This is going to be used to determine where the most interesting places to zoom into are
+        self.iteration_array = list()
+        for column in range(self.x_width):
+            column_values = list()
+            for row in range(self.y_height):
+                column_values.append(0)
+            self.iteration_array.append(column_values)
