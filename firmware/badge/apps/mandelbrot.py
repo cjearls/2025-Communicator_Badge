@@ -53,10 +53,10 @@ def get_iteration_deltas(iteration_array):
                 pass
             else:
                 # add the difference values for neighboring pixels in x and y
-                delta_sum += abs(iteration_value - iteration_array[column_index+1][row_index])
-                delta_sum += abs(iteration_value - iteration_array[column_index-1][row_index])
-                delta_sum += abs(iteration_value - iteration_array[column_index][row_index+1])
-                delta_sum += abs(iteration_value - iteration_array[column_index][row_index-1])
+                delta_sum += abs(iteration_value - iteration_array[column_index+1][row_index])**4
+                delta_sum += abs(iteration_value - iteration_array[column_index-1][row_index])**4
+                delta_sum += abs(iteration_value - iteration_array[column_index][row_index+1])**4
+                delta_sum += abs(iteration_value - iteration_array[column_index][row_index-1])**4
             # add the delta average to the array for later processing
             delta_array[column_index].append(delta_sum/4)
 
@@ -67,24 +67,39 @@ def cycle_colors(counter_value, max_counter):
     red = 0
     green = 0
     blue = 0
-    threshold_count = max_counter/3
-    threshold0 = threshold_count
-    threshold1 = 2*max_counter/3
+    threshold_count = max_counter/6
+    threshold0 = 1*threshold_count
+    threshold1 = 2*threshold_count
+    threshold2 = 3*threshold_count
+    threshold3 = 4*threshold_count
+    threshold4 = 5*threshold_count
+    threshold5 = 6*threshold_count
 
     # There are three parts of the cycle:
-    if counter_value >= 0 and counter_value < threshold0:
+    if counter_value < threshold0:
         # Transition the colors from black to red
         red = counter_value*0xFF/(threshold_count)
-    elif counter_value >= threshold0 and counter_value < threshold1:
-        # Transition the colors from green to blue
-        red = 0xFF-(counter_value-threshold0)*0xFF/(threshold_count)
+    elif counter_value < threshold1:
+        red = 0xFF
         green = (counter_value-threshold0)*0xFF/(threshold_count)
-    elif counter_value < max_counter:
+    elif counter_value < threshold2:
+        red = 0xFF-(counter_value-threshold1)*0xFF/(threshold_count)
+        green = 0xFF
+    elif counter_value < threshold3:
         # Transition the colors from green to blue
-        green = 0xFF-(counter_value-threshold1)*0xFF/(threshold_count)
-        blue = (counter_value-threshold1)*0xFF/(threshold_count)
+        green = 0xFF
+        blue = (counter_value-threshold2)*0xFF/(threshold_count)
+    elif counter_value < threshold4:
+        # Transition the colors from green to blue
+        blue = 0xFF
+        green = 0xFF-(counter_value-threshold3)*0xFF/(threshold_count)
+    elif counter_value < threshold5:
+        # Transition the colors from green to blue
+        blue = 0xFF
+        red = (counter_value-threshold4)*0xFF/(threshold_count)
     else:
         blue = 0xFF
+        red = 0xFF
 
     # Create the 24-bit color by combining the component colors
     new_color = (int(red)<<16) | (int(green)<<8) | int(blue)
@@ -135,6 +150,24 @@ class App(BaseApp):
                 z = (0.0, 0.0)
                 c = (graph_x/self.zoom_factor+self.zoom_center_x, graph_y/self.zoom_factor + self.zoom_center_y)
                 (iterations, z_result) = mandelbrot_iter(z, c, self.bound_number, self.mandelbrot_iterations)
+                # print("New pixel")
+                # print("x: " + str(x))
+                # print("y: " + str(y))
+                # print("zoom factor: " + str(self.zoom_factor))
+                # print("zoom_center_x: " + str(self.zoom_center_x))
+                # print("zoom_center_y: " + str(self.zoom_center_y))
+                # print("c_real: " + str(c[0]))
+                # print("c_imag: " + str(c[1]))
+                # print("iterations: " + str(iterations))
+                # print("x: " + f"{x:.32f}")
+                # print("y: " + f"{y:.32f}")
+                # print("zoom factor: " + f"{self.zoom_factor:.32f}")
+                # print("zoom_center_x: " + f"{self.zoom_center_x:.32f}")
+                # print("zoom_center_y: " + f"{self.zoom_center_y:.32f}")
+                # print("c_real: " + f"{c[0]:.32f}")
+                # print("c_imag: " + f"{c[1]:.32f}")
+                # print("iterations: " + f"{iterations:.32f}")
+                print("")
 
                 # Log the iterations needed so we can choose an interesting place to zoom next time
                 self.iteration_array[x][self.y_height - 1 - y] = iterations
@@ -216,11 +249,11 @@ class App(BaseApp):
         # This tells where on the fractal we'll be rendering
         self.zoom_center_x = float(-0.74548)
         self.zoom_center_y = float(0.11669)
-        # self.zoom_factor = float(500_000.0)
-        self.zoom_factor = float(100.0)
+        self.zoom_factor = float(500_000.0)
+        # self.zoom_factor = float(100.0)
         self.zoom_scale_factor = 4.0
         # This is the threshold we use to test how many iterations it takes to escape, so we can keep rendering pretty stuff
-        self.bound_number = 10.0**20
+        self.bound_number = 10.0
         # self.bound_number = 10.0**5
         # This is the number of times we run mandelbrot to see if it escapes the bounds
         self.mandelbrot_iterations = 0xFE
