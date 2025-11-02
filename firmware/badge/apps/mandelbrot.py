@@ -137,7 +137,7 @@ class App(BaseApp):
                 (iterations, z_result) = mandelbrot_iter(z, c, self.bound_number, self.mandelbrot_iterations)
 
                 # Log the iterations needed so we can choose an interesting place to zoom next time
-                self.iteration_array[x][y] = iterations
+                self.iteration_array[x][self.y_height - 1 - y] = iterations
 
                 # Then convert it to the display's RGB565 format
                 color_24bit = cycle_colors(iterations, self.mandelbrot_iterations+1)
@@ -216,8 +216,8 @@ class App(BaseApp):
         # This tells where on the fractal we'll be rendering
         self.zoom_center_x = float(-0.74548)
         self.zoom_center_y = float(0.11669)
-        self.zoom_factor = float(500_000.0)
-        # self.zoom_factor = float(100.0)
+        # self.zoom_factor = float(500_000.0)
+        self.zoom_factor = float(100.0)
         self.zoom_scale_factor = 4.0
         # This is the threshold we use to test how many iterations it takes to escape, so we can keep rendering pretty stuff
         self.bound_number = 10.0**20
