@@ -104,7 +104,7 @@ class BadgeNet:
                     try:
                         message = NetworkFrame().set_frame(frame).validate_frame()
                         # print(f"Received frame {repr(message)}")
-                    except (ValueError, IndexError) as err:
+                    except ValueError as err:
                         print(f"Failed validation {repr(frame)}: {err}")
                         continue
 
@@ -114,9 +114,8 @@ class BadgeNet:
                     seen_checksum = struct.unpack(
                         "!H", message.frame[CHECKSUM_OFFSET : CHECKSUM_OFFSET + 2]
                     )[0]
-                    seen_count, seen_timestamp = self.recently_seen_messages.get(seen_checksum, (0, time.time()))
+                    seen_count, seen_timestamp = self.recently_seen_messages.get(seen_checksum, (0, 0))
                     self.recently_seen_messages[seen_checksum] = (seen_count + 1, seen_timestamp)
-                    # print(f"Seen {seen_checksum} @ {seen_timestamp} x {seen_count}")
                     if seen_count == 0:
                         # Check how many times this has been recently seen, and if not, add it to the tx queue
                         retransmit_message = message.check_for_retransmit(MY_ADDRESS)

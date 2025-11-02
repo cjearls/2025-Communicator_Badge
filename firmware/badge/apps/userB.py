@@ -80,13 +80,13 @@ class App(BaseApp):
             If you don't have special transition logic, you can delete this method.
         """
         super().switch_to_foreground()
-        self.p = Page()
+        p = Page()
         ## Note this order is important: it renders top to bottom that the "content" section expands to fill empty space
         ## If you want to go fully clean-slate, you can draw straight onto the p.scr object, which should fit the full screen.
-        self.p.create_infobar(["My First App", "Prints to Serial Console"])
-        self.p.create_content()
-        self.p.create_menubar(["Hello", "World", "Read more", "Hackaday", "Done"])
-        self.p.replace_screen()
+        p.create_infobar(["My First App", "Prints to Serial Console"])
+        p.create_content()
+        p.create_menubar(["This", "is a ", "test", "Chandler is cool", "Done"])
+        p.replace_screen()
 
 
     def switch_to_background(self):
