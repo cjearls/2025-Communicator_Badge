@@ -137,7 +137,7 @@ class App(BaseApp):
                 (iterations, z_result) = mandelbrot_iter(z, c, self.bound_number, self.mandelbrot_iterations)
 
                 # Log the iterations needed so we can choose an interesting place to zoom next time
-                self.iteration_array[x][self.y_height-1-y] = iterations
+                self.iteration_array[x][y] = iterations
 
                 # Then convert it to the display's RGB565 format
                 color_24bit = cycle_colors(iterations, self.mandelbrot_iterations+1)
@@ -153,18 +153,6 @@ class App(BaseApp):
 
         # Get the deltas of each pixel with its neighbors and put them in an array
         delta_array = get_iteration_deltas(self.iteration_array)
-        # # Get the pixel with the largest delta and zoom in on it
-        # max_x_index = 0
-        # max_y_index = 0
-        # max_delta = 0
-        # for x_index in range(len(delta_array)):
-        #     for y_index in range(len(delta_array[x_index])):
-        #         if delta_array[x_index][y_index] > max_delta:
-        #             max_delta = delta_array[x_index][y_index]
-        #             max_x_index = x_index
-        #             max_y_index = y_index
-        # self.zoom_center_x = self.zoom_center_x + (max_x_index - self.x_width/2)/self.zoom_factor
-        # self.zoom_center_y = self.zoom_center_y + (max_y_index - self.y_height/2)/self.zoom_factor
 
         # Get the next frame center with the largest delta for a better photo
         frame_width = self.x_width/self.zoom_factor
@@ -172,6 +160,22 @@ class App(BaseApp):
         (new_zoom_center_x, new_zoom_center_y) = find_best_frame(delta_array, frame_width, frame_height, self.x_width, self.y_height)
         self.zoom_center_x = self.zoom_center_x + (new_zoom_center_x - self.x_width/2)/self.zoom_factor
         self.zoom_center_y = self.zoom_center_y + (new_zoom_center_y - self.y_height/2)/self.zoom_factor
+
+        # # If necessary, modify the bound number to make sure it looks colorful
+        # max_iterations = 0
+        # min_iterations = self.mandelbrot_iterations + 1
+        # for iteration_column_index in range(int(new_zoom_center_x - frame_width/2), int(new_zoom_center_x + frame_width/2)):
+        #     for iteration_row_index in range(int(new_zoom_center_y - frame_height/2), int(new_zoom_center_y + frame_height/2)):
+        #         iteration = self.iteration_array[iteration_column_index][iteration_row_index]
+        #         if iteration > max_iterations:
+        #             max_iterations = iteration
+        #         if iteration < min_iterations:
+        #             min_iterations = iteration
+        
+        # if min_iterations > 0 and max_iterations == self.mandelbrot_iterations+1:
+        #     self.bound_number /= 10
+        # elif min_iterations == 0 and max_iterations < self.mandelbrot_iterations+1:
+        #     self.bound_number *= 10
 
         # Increase the zoom and go again
         self.zoom_factor *= self.zoom_scale_factor
