@@ -30,7 +30,8 @@ def find_best_frame(delta_array, frame_width, frame_height, x_width, y_height):
             delta_sum = 0
             for column_index in range(int(x-frame_width/2), int(x+frame_width/2)):
                 for row_index in range(int(y-frame_height/2), int(y+frame_height/2)):
-                    delta_sum += delta_array[column_index][row_index]
+                    # Taking delta to the power of 2 to prioritize high-change pixels
+                    delta_sum += delta_array[column_index][row_index]**4
 
             if delta_sum > delta_max:
                 delta_max = delta_sum
@@ -53,10 +54,10 @@ def get_iteration_deltas(iteration_array):
                 pass
             else:
                 # add the difference values for neighboring pixels in x and y
-                delta_sum += abs(iteration_value - iteration_array[column_index+1][row_index])**4
-                delta_sum += abs(iteration_value - iteration_array[column_index-1][row_index])**4
-                delta_sum += abs(iteration_value - iteration_array[column_index][row_index+1])**4
-                delta_sum += abs(iteration_value - iteration_array[column_index][row_index-1])**4
+                delta_sum += abs(iteration_value - iteration_array[column_index+1][row_index])
+                delta_sum += abs(iteration_value - iteration_array[column_index-1][row_index])
+                delta_sum += abs(iteration_value - iteration_array[column_index][row_index+1])
+                delta_sum += abs(iteration_value - iteration_array[column_index][row_index-1])
             # add the delta average to the array for later processing
             delta_array[column_index].append(delta_sum/4)
 
@@ -167,7 +168,6 @@ class App(BaseApp):
                 # print("c_real: " + f"{c[0]:.32f}")
                 # print("c_imag: " + f"{c[1]:.32f}")
                 # print("iterations: " + f"{iterations:.32f}")
-                print("")
 
                 # Log the iterations needed so we can choose an interesting place to zoom next time
                 self.iteration_array[x][self.y_height - 1 - y] = iterations
@@ -183,6 +183,12 @@ class App(BaseApp):
                 self.canvas_buffer[2*x+1+self.x_width*2*y] = upper_color_byte
             # By setting the buffer, we tell the display to update with the new data we've written to it
             self.canvas.set_buffer(self.canvas_buffer,self.x_width,self.y_height,lvgl.COLOR_FORMAT.RGB565)
+            # Print out all the relevant information to reproduce this
+            print("zoom factor: " + f"{self.zoom_factor:.32f}")
+            print("zoom_center_x: " + f"{self.zoom_center_x:.32f}")
+            print("zoom_center_y: " + f"{self.zoom_center_y:.32f}")
+            print("bound number: " + f"{self.bound_number:.32f}")
+            print("mandelbrot max iterations:" + str(self.mandelbrot_iterations))
 
         # Get the deltas of each pixel with its neighbors and put them in an array
         delta_array = get_iteration_deltas(self.iteration_array)
@@ -249,15 +255,16 @@ class App(BaseApp):
         # This tells where on the fractal we'll be rendering
         self.zoom_center_x = float(-0.74548)
         self.zoom_center_y = float(0.11669)
-        self.zoom_factor = float(500_000.0)
-        # self.zoom_factor = float(100.0)
+        # self.zoom_factor = float(500_000.0)
+        self.zoom_factor = float(100.0)
         self.zoom_scale_factor = 4.0
         # This is the threshold we use to test how many iterations it takes to escape, so we can keep rendering pretty stuff
-        self.bound_number = 10.0
+        # self.bound_number = 10.0
         # self.bound_number = 10.0**5
-        # self.bound_number = 10.0**20
+        self.bound_number = 10.0**20
         # This is the number of times we run mandelbrot to see if it escapes the bounds
         self.mandelbrot_iterations = 0xFE
+        # self.mandelbrot_iterations = 0xFE
         # self.mandelbrot_iterations = 0x08
         # This is going to be used to determine where the most interesting places to zoom into are
         self.iteration_array = list()
