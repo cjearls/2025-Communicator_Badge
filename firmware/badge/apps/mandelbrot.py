@@ -174,8 +174,15 @@ class App(BaseApp):
 
                 # Then convert it to the display's RGB565 format
                 color_24bit = cycle_colors(iterations, self.mandelbrot_iterations+1)
-
-                self.canvas.set_px(x, y, lvgl.color_hex(color_24bit), True)
+                color =  generate_565_color((color_24bit>>16)&0xFF, (color_24bit>>8)&0xFF, color_24bit&0xFF)
+                
+                #Then get the upper and lower bytes of the color for writing to the buffer
+                upper_color_byte = color >> 8
+                lower_color_byte = color & 0xFF
+                self.canvas_buffer[2*x+self.x_width*2*y] = lower_color_byte
+                self.canvas_buffer[2*x+1+self.x_width*2*y] = upper_color_byte
+            # By setting the buffer, we tell the display to update with the new data we've written to it
+            self.canvas.set_buffer(self.canvas_buffer,self.x_width,self.y_height,lvgl.COLOR_FORMAT.RGB565)
 
         # Get the deltas of each pixel with its neighbors and put them in an array
         delta_array = get_iteration_deltas(self.iteration_array)
@@ -248,6 +255,7 @@ class App(BaseApp):
         # This is the threshold we use to test how many iterations it takes to escape, so we can keep rendering pretty stuff
         self.bound_number = 10.0
         # self.bound_number = 10.0**5
+        # self.bound_number = 10.0**20
         # This is the number of times we run mandelbrot to see if it escapes the bounds
         self.mandelbrot_iterations = 0xFE
         # self.mandelbrot_iterations = 0x08
