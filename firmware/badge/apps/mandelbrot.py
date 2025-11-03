@@ -253,20 +253,35 @@ class App(BaseApp):
         self.canvas.center()
 
         # This tells where on the fractal we'll be rendering
-        self.zoom_center_x = float(-0.74548)
-        self.zoom_center_y = float(0.11669)
+        # Seahorse Valley:
+        # self.zoom_center_x = float(-0.74548)
+        # self.zoom_center_y = float(0.11669)
         # self.zoom_factor = float(500_000.0)
-        self.zoom_factor = float(100.0)
-        self.zoom_scale_factor = 4.0
-        # This is the threshold we use to test how many iterations it takes to escape, so we can keep rendering pretty stuff
-        # self.bound_number = 10.0
-        # self.bound_number = 10.0**5
-        self.bound_number = 10.0**20
         # This is the number of times we run mandelbrot to see if it escapes the bounds
-        self.mandelbrot_iterations = 0xFE
         # self.mandelbrot_iterations = 0xFE
-        # self.mandelbrot_iterations = 0x08
+        # This is the threshold we use to test how many iterations it takes to escape, so we can keep rendering pretty stuff
+        # self.bound_number = 10.0**20
+        # Really Pretty and Fast
+        self.zoom_center_x = float(-0.315479993820190429687500000)
+        self.zoom_center_y = float(0.65606503486633300781250000000)
+        self.zoom_factor = float(6400.0)
+        # This is the number of times we run mandelbrot to see if it escapes the bounds
+        self.mandelbrot_iterations = 0x7E
+        # This is the threshold we use to test how many iterations it takes to escape, so we can keep rendering pretty stuff
+        self.bound_number = 10.0**20
+        # self.zoom_center_x = float(-0.315479993820190429687500000)
+        # self.zoom_center_y = float(0.65606503486633300781250000000)
+        # self.zoom_factor = float(6400.0)
+        # This is the threshold we use to test how many iterations it takes to escape, so we can keep rendering pretty stuff
+        # self.bound_number = (10.0**38)*3.25 # 3.125 and 3.4375
+        # This is the number of times we run mandelbrot to see if it escapes the bounds
+        # self.mandelbrot_iterations = 0x1FE
         # This is going to be used to determine where the most interesting places to zoom into are
+        # Other potential numbers:
+        #zoom factor: 25600.0000000000000000000000000
+        #zoom_center_x: -0.3426674842834472656250000000
+        #zoom_center_y: 0.64590878486633300781250000000
+        self.zoom_scale_factor = 4.0
         self.iteration_array = list()
         for column in range(self.x_width):
             column_values = list()
